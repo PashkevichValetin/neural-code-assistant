@@ -2,12 +2,14 @@ package com.valentin.rag.service;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
-import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
+import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IngestionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(IngestionService.class);
+
     private final PgVectorEmbeddingStore embeddingStore;
     private final dev.langchain4j.model.embedding.EmbeddingModel embeddingModel;
 
@@ -27,7 +31,7 @@ public class IngestionService {
     public void importDocuments() {
         Path documentsPath = Paths.get("documents");
 
-        DocumentParser parser = new ApacheTikaDocumentParser();
+        DocumentParser parser = new TextDocumentParser();
         List<Document> documents = FileSystemDocumentLoader.loadDocuments(documentsPath, parser);
 
         EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
@@ -36,8 +40,8 @@ public class IngestionService {
                 .embeddingStore(embeddingStore)
                 .build();
 
-        System.out.println("Начинаю индексацию документов из: " + documentsPath.toAbsolutePath());
+        logger.info("Начинаю индексацию документов из: " + documentsPath.toAbsolutePath());
         ingestor.ingest(documents);
-        System.out.println("Индексация завершена успешно!");
+        logger.info("Индексация завершена успешно!");
     }
 }

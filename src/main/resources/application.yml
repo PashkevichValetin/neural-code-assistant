@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: neural-code-assistant
@@ -13,6 +16,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+logging:
+  level:
+    com.valentin.rag: INFO
+    dev.langchain4j: INFO
+
 langchain4j:
   ollama:
     chat-model:
@@ -26,7 +34,6 @@ langchain4j:
     embedding-model:
       base-url: http://localhost:11434
       model-name: nomic-embed-text
-
   pgvector:
     host: localhost
     port: 5432
@@ -35,3 +42,4 @@ langchain4j:
     password: secret
     table: test_embeddings
     dimension: 768
+
