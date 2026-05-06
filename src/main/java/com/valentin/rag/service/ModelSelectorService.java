@@ -32,7 +32,9 @@ public class ModelSelectorService {
                 .baseUrl(baseUrl)
                 .modelName(modelName)
                 .temperature(0.1)
-                .timeout(Duration.ofMinutes(3))
+                .timeout(Duration.ofMinutes(5))
+                .numCtx(16384)
+                .numPredict(4096)
                 .build();
     }
 
@@ -44,7 +46,9 @@ public class ModelSelectorService {
                 .baseUrl(baseUrl)
                 .modelName(modelName)
                 .temperature(0.1)
-                .timeout(Duration.ofMinutes(3))
+                .timeout(Duration.ofMinutes(5))
+                .numCtx(16384)
+                .numPredict(4096)
                 .build();
     }
 
