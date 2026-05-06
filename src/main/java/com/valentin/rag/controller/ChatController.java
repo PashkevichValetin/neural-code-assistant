@@ -17,19 +17,16 @@ public class ChatController {
     private final Assistant assistant;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> stream(@RequestParam String question) {
-        if (question == null || question.trim().isEmpty()) {
-            return Flux.error(new IllegalArgumentException("Вопрос не может быть пустым"));
-        }
-
+    public Flux<java.util.Map<String, String>> stream(@RequestParam String question) {
         return Flux.create(emitter -> {
             assistant.chat(question)
-                    .onNext(emitter::next)
+                    .onNext(token -> emitter.next(java.util.Collections.singletonMap("content", token)))
                     .onComplete(tokenResponse -> emitter.complete())
                     .onError(emitter::error)
                     .start();
         });
     }
+
 
     @GetMapping("/ask")
     public String ask(@RequestParam String question) {
