@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: neural-code-assistant
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rag_db
+    username: valentin
+    password: secret
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+langchain4j:
+  ollama:
+    chat-model:
+      base-url: http://localhost:11434
+      model-name: alibayram/qwen3-30b-a3b-instruct-2507:latest
+      temperature: 0.1
+    streaming-chat-model:
+      base-url: http://localhost:11434
+      model-name: alibayram/qwen3-30b-a3b-instruct-2507:latest
+      temperature: 0.1
+    embedding-model:
+      base-url: http://localhost:11434
+      model-name: nomic-embed-text
+
+  pgvector:
+    host: localhost
+    port: 5432
+    database: rag_db
+    user: valentin
+    password: secret
+    table: test_embeddings
+    dimension: 768
