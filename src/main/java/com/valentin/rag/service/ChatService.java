@@ -14,8 +14,16 @@ public class ChatService {
     private final ChatLanguageModel chatModel;
     private final PgVectorEmbeddingStore embeddingStore;
     private final dev.langchain4j.model.embedding.EmbeddingModel embeddingModel;
+    private final ModelSelectorService modelSelectorService;
 
     public String ask(String question) {
+        return askWithModel(question, null);
+    }
+
+    public String askWithModel(String question, String modelName) {
+        ChatLanguageModel model = modelName != null ?
+                modelSelectorService.getChatLanguageModel(modelName) : chatModel;
+
         EmbeddingStoreRetriever retriever = EmbeddingStoreRetriever.from(
                 embeddingStore,
                 embeddingModel,
@@ -23,7 +31,7 @@ public class ChatService {
         );
 
         ConversationalRetrievalChain chain = ConversationalRetrievalChain.builder()
-                .chatLanguageModel(chatModel)
+                .chatLanguageModel(model)
                 .retriever(retriever)
                 .build();
 

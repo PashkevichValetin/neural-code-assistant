@@ -11,6 +11,7 @@ import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,8 +20,11 @@ import java.time.Duration;
 @Configuration
 public class LangChainConfig {
 
-    private final String baseUrl = "http://localhost:11434";
-    private final String modelName = "alibayram/qwen3-30b-a3b-instruct-2507:latest";
+    @Value("${ollama.base-url}")
+    private String baseUrl;
+
+    @Value("${ollama.default-model}")
+    private String defaultModelName;
 
     @Bean
     public PgVectorEmbeddingStore embeddingStore() {
@@ -39,7 +43,7 @@ public class LangChainConfig {
     public ChatLanguageModel chatLanguageModel() {
         return OllamaChatModel.builder()
                 .baseUrl(baseUrl)
-                .modelName(modelName)
+                .modelName(defaultModelName)
                 .temperature(0.1)
                 .timeout(Duration.ofMinutes(3))
                 .build();
@@ -49,7 +53,7 @@ public class LangChainConfig {
     public StreamingChatLanguageModel streamingChatLanguageModel() {
         return OllamaStreamingChatModel.builder()
                 .baseUrl(baseUrl)
-                .modelName(modelName)
+                .modelName(defaultModelName)
                 .temperature(0.1)
                 .timeout(Duration.ofMinutes(3))
                 .build();

@@ -16,6 +16,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+ollama:
+  base-url: http://localhost:11434
+  default-model: alibayram/qwen3-30b-a3b-instruct-2507:latest
+
 logging:
   level:
     com.valentin.rag: INFO
