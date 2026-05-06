@@ -10,6 +10,7 @@ import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -24,24 +25,31 @@ public class IngestionService {
 
     private static final Logger logger = LoggerFactory.getLogger(IngestionService.class);
 
+    @Value("${documents.path:documents}")
+    private String documentsPath;
+
     private final PgVectorEmbeddingStore embeddingStore;
     private final dev.langchain4j.model.embedding.EmbeddingModel embeddingModel;
 
     @EventListener(ApplicationReadyEvent.class)
     public void importDocuments() {
-        Path documentsPath = Paths.get("documents");
+        Path path = Paths.get(documentsPath);
 
-        DocumentParser parser = new TextDocumentParser();
-        List<Document> documents = FileSystemDocumentLoader.loadDocuments(documentsPath, parser);
+        try {
+            DocumentParser parser = new TextDocumentParser();
+            List<Document> documents = FileSystemDocumentLoader.loadDocuments(path, parser);
 
-        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-                .documentSplitter(new DocumentByParagraphSplitter(500, 100))
-                .embeddingModel(embeddingModel)
-                .embeddingStore(embeddingStore)
-                .build();
+            EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+                    .documentSplitter(new DocumentByParagraphSplitter(500, 100))
+                    .embeddingModel(embeddingModel)
+                    .embeddingStore(embeddingStore)
+                    .build();
 
-        logger.info("Начинаю индексацию документов из: " + documentsPath.toAbsolutePath());
-        ingestor.ingest(documents);
-        logger.info("Индексация завершена успешно!");
+            logger.info("Начинаю индексацию документов из: {}", path.toAbsolutePath());
+            ingestor.ingest(documents);
+            logger.info("Индексация завершена успешно!");
+        } catch (Exception e) {
+            logger.error("Ошибка при индексации документов: {}", e.getMessage(), e);
+        }
     }
 }

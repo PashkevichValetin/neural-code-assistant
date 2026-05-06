@@ -1,9 +1,6 @@
 package com.valentin.rag.service;
 
-import dev.langchain4j.chain.ConversationalRetrievalChain;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.retriever.EmbeddingStoreRetriever;
-import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,30 +8,29 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ChatLanguageModel chatModel;
-    private final PgVectorEmbeddingStore embeddingStore;
-    private final dev.langchain4j.model.embedding.EmbeddingModel embeddingModel;
+    private final SyncAssistant syncAssistant;       // синхронный ассистент (по умолчанию)
     private final ModelSelectorService modelSelectorService;
+    private final ContentRetriever contentRetriever; // общий ретривер
 
     public String ask(String question) {
         return askWithModel(question, null);
     }
 
     public String askWithModel(String question, String modelName) {
-        ChatLanguageModel model = modelName != null ?
-                modelSelectorService.getChatLanguageModel(modelName) : chatModel;
+        if (question == null || question.trim().isEmpty()) {
+            throw new IllegalArgumentException("Вопрос не может быть пустым");
+        }
 
-        EmbeddingStoreRetriever retriever = EmbeddingStoreRetriever.from(
-                embeddingStore,
-                embeddingModel,
-                3
-        );
+        if (modelName == null || modelName.isEmpty()) {
+            return syncAssistant.chat(question);
+        }
 
-        ConversationalRetrievalChain chain = ConversationalRetrievalChain.builder()
+        // для указанной модели создаём временный синхронный ассистент
+        var model = modelSelectorService.getChatLanguageModel(modelName);
+        var tempAssistant = dev.langchain4j.service.AiServices.builder(SyncAssistant.class)
                 .chatLanguageModel(model)
-                .retriever(retriever)
+                .contentRetriever(contentRetriever)
                 .build();
-
-        return chain.execute(question);
+        return tempAssistant.chat(question);
     }
 }

@@ -1,6 +1,7 @@
 package com.valentin.rag.config;
 
 import com.valentin.rag.service.Assistant;
+import com.valentin.rag.service.SyncAssistant;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -67,18 +68,31 @@ public class LangChainConfig {
                 .build();
     }
 
+    // Общий ContentRetriever для всех ассистентов
     @Bean
-    public Assistant assistant(StreamingChatLanguageModel streamingChatLanguageModel,
-                               PgVectorEmbeddingStore embeddingStore,
-                               EmbeddingModel embeddingModel) {
-        ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
+    public ContentRetriever contentRetriever(PgVectorEmbeddingStore embeddingStore, EmbeddingModel embeddingModel) {
+        return EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(embeddingStore)
                 .embeddingModel(embeddingModel)
                 .maxResults(3)
                 .build();
+    }
 
+    // Потоковый ассистент (используется по умолчанию)
+    @Bean
+    public Assistant streamingAssistant(StreamingChatLanguageModel streamingChatLanguageModel,
+                                        ContentRetriever contentRetriever) {
         return AiServices.builder(Assistant.class)
                 .streamingChatLanguageModel(streamingChatLanguageModel)
+                .contentRetriever(contentRetriever)
+                .build();
+    }
+
+    // Синхронный ассистент (для ChatService)
+    @Bean
+    public SyncAssistant syncAssistant(ChatLanguageModel chatLanguageModel, ContentRetriever contentRetriever) {
+        return AiServices.builder(SyncAssistant.class)
+                .chatLanguageModel(chatLanguageModel)
                 .contentRetriever(contentRetriever)
                 .build();
     }

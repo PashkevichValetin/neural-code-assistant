@@ -3,8 +3,11 @@ package com.valentin.rag.controller;
 import com.valentin.rag.service.Assistant;
 import com.valentin.rag.service.ChatService;
 import com.valentin.rag.service.ModelSelectorService;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
+import dev.langchain4j.service.AiServices;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -18,45 +21,68 @@ import java.util.Map;
 public class ChatController {
 
     private final ChatService chatService;
-    private final Assistant assistant;
+    private final Assistant streamingAssistant;
     private final ModelSelectorService modelSelectorService;
+    private final ContentRetriever contentRetriever;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<Map<String, String>> stream(@RequestParam String question, @RequestParam(required = false) String modelName) {
+    public Flux<Map<String, String>> stream(@RequestParam String question,
+                                            @RequestParam(required = false) String modelName) {
+        if (question == null || question.trim().isEmpty()) {
+            return Flux.error(new IllegalArgumentException("Вопрос не может быть пустым"));
+        }
+
         return Flux.create(emitter -> {
-            // Если модель не указана, используем текущую
-            if (modelName == null || modelName.isEmpty()) {
-                assistant.chat(question)
-                        .onNext(token -> emitter.next(Map.of("content", token)))
-                        .onComplete(tokenResponse -> emitter.complete())
-                        .onError(emitter::error)
-                        .start();
-            } else {
-                // Используем указанную модель
-                assistant.chatWithModel(question, modelName)
-                        .onNext(token -> emitter.next(Map.of("content", token)))
-                        .onComplete(tokenResponse -> emitter.complete())
-                        .onError(emitter::error)
-                        .start();
+            try {
+                // Если модель не указана — используем основной ассистент
+                if (modelName == null || modelName.isEmpty()) {
+                    streamingAssistant.chat(question)
+                            .onNext(token -> emitter.next(Map.of("content", token)))
+                            .onComplete(response -> emitter.complete())
+                            .onError(emitter::error)
+                            .start();
+                } else {
+                    // Для указанной модели создаём временный ассистент
+                    var model = modelSelectorService.getStreamingChatLanguageModel(modelName);
+                    var tempAssistant = AiServices.builder(Assistant.class)
+                            .streamingChatLanguageModel(model)
+                            .contentRetriever(contentRetriever)
+                            .build();
+
+                    tempAssistant.chat(question)
+                            .onNext(token -> emitter.next(Map.of("content", token)))
+                            .onComplete(response -> emitter.complete())
+                            .onError(emitter::error)
+                            .start();
+                }
+            } catch (Exception e) {
+                emitter.error(e);
             }
         });
     }
 
     @GetMapping("/ask")
-    public String ask(@RequestParam String question, @RequestParam(required = false) String modelName) {
+    public ResponseEntity<String> ask(@RequestParam String question,
+                                      @RequestParam(required = false) String modelName) {
         if (question == null || question.trim().isEmpty()) {
-            return "Вопрос не может быть пустым";
+            return ResponseEntity.badRequest().body("Вопрос не может быть пустым");
         }
-
-        if (modelName == null || modelName.isEmpty()) {
-            return chatService.ask(question);
-        } else {
-            return chatService.askWithModel(question, modelName);
+        try {
+            String answer = (modelName == null || modelName.isEmpty())
+                    ? chatService.ask(question)
+                    : chatService.askWithModel(question, modelName);
+            return ResponseEntity.ok(answer);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Ошибка при обработке запроса: " + e.getMessage());
         }
     }
 
     @GetMapping("/models")
-    public List<String> getAvailableModels() {
-        return modelSelectorService.getAvailableModels();
+    public ResponseEntity<List<String>> getAvailableModels() {
+        try {
+            return ResponseEntity.ok(modelSelectorService.getAvailableModels());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 }

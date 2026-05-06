@@ -2,9 +2,7 @@ package com.valentin.rag.service;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.StreamingChatLanguageModel;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,6 +25,9 @@ public class ModelSelectorService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public ChatLanguageModel getChatLanguageModel(String modelName) {
+        if (modelName == null || modelName.isBlank()) {
+            throw new IllegalArgumentException("Имя модели не может быть пустым");
+        }
         return OllamaChatModel.builder()
                 .baseUrl(baseUrl)
                 .modelName(modelName)
@@ -36,6 +37,9 @@ public class ModelSelectorService {
     }
 
     public StreamingChatLanguageModel getStreamingChatLanguageModel(String modelName) {
+        if (modelName == null || modelName.isBlank()) {
+            throw new IllegalArgumentException("Имя модели не может быть пустым");
+        }
         return OllamaStreamingChatModel.builder()
                 .baseUrl(baseUrl)
                 .modelName(modelName)
@@ -44,22 +48,13 @@ public class ModelSelectorService {
                 .build();
     }
 
-    public EmbeddingModel getEmbeddingModel(String modelName) {
-        return OllamaEmbeddingModel.builder()
-                .baseUrl(baseUrl)
-                .modelName(modelName)
-                .build();
-    }
-
     public List<String> getAvailableModels() {
         try {
             String url = baseUrl + "/api/tags";
-
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-
             if (response != null && response.containsKey("models")) {
+                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> models = (List<Map<String, Object>>) response.get("models");
-
                 return models.stream()
                         .map(m -> (String) m.get("name"))
                         .filter(name -> !name.contains("embed"))
@@ -71,15 +66,6 @@ public class ModelSelectorService {
         return List.of(defaultModelName);
     }
 }
-
-
-
-
-
-
-
-
-
 
 
 
