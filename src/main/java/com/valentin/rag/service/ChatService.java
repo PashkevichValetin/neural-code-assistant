@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final SyncAssistant syncAssistant;       // синхронный ассистент (по умолчанию)
+    private final SyncAssistant syncAssistant;
     private final ModelSelectorService modelSelectorService;
-    private final ContentRetriever contentRetriever; // общий ретривер
+    private final ContentRetriever contentRetriever;
 
     public String ask(String question) {
         return askWithModel(question, null);
@@ -25,7 +25,6 @@ public class ChatService {
             return syncAssistant.chat(question);
         }
 
-        // для указанной модели создаём временный синхронный ассистент
         var model = modelSelectorService.getChatLanguageModel(modelName);
         var tempAssistant = dev.langchain4j.service.AiServices.builder(SyncAssistant.class)
                 .chatLanguageModel(model)
