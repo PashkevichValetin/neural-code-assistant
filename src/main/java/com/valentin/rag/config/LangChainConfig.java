@@ -68,7 +68,6 @@ public class LangChainConfig {
                 .build();
     }
 
-    // Общий ContentRetriever для всех ассистентов
     @Bean
     public ContentRetriever contentRetriever(PgVectorEmbeddingStore embeddingStore, EmbeddingModel embeddingModel) {
         return EmbeddingStoreContentRetriever.builder()
@@ -78,7 +77,6 @@ public class LangChainConfig {
                 .build();
     }
 
-    // Потоковый ассистент (используется по умолчанию)
     @Bean
     public Assistant streamingAssistant(StreamingChatLanguageModel streamingChatLanguageModel,
                                         ContentRetriever contentRetriever) {
@@ -88,7 +86,6 @@ public class LangChainConfig {
                 .build();
     }
 
-    // Синхронный ассистент (для ChatService)
     @Bean
     public SyncAssistant syncAssistant(ChatLanguageModel chatLanguageModel, ContentRetriever contentRetriever) {
         return AiServices.builder(SyncAssistant.class)

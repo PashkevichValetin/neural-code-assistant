@@ -33,6 +33,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
+	implementation("org.springframework.boot:spring-boot-starter-security")
+
+
 	runtimeOnly("org.postgresql:postgresql")
 	implementation("org.apache.tika:tika-core:2.9.1")
 
