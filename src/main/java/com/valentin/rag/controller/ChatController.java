@@ -72,7 +72,6 @@ public class ChatController {
     @GetMapping("/ask")
     public ResponseEntity<String> ask(@RequestParam String question,
                                       @RequestParam(required = false) String modelName) {
-        // Проверяем аутентификацию
         if (!securityService.isUserAuthenticated()) {
             return ResponseEntity.status(401).body("Доступ запрещен. Пожалуйста, авторизуйтесь");
         }
@@ -92,7 +91,6 @@ public class ChatController {
 
     @GetMapping("/models")
     public ResponseEntity<List<String>> getAvailableModels() {
-        // Проверяем аутентификацию
         if (!securityService.isUserAuthenticated()) {
             return ResponseEntity.status(401).build();
         }
