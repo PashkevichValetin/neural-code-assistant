@@ -8,21 +8,21 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws  Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/chat/stram", "/api/chat/ask", "/api/chat/models").authenticated()
                         .requestMatchers("/api/chat/**").authenticated()
                         .anyRequest().permitAll()
                 )
-                .httpBasic(AbstractHttpConfigurer::disable);
+                .httpBasic(withDefaults());
         return http.build();
     }
 }

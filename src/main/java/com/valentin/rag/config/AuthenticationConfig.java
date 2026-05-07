@@ -24,7 +24,11 @@ public class AuthenticationConfig {
     public UserDetailsService userDetailsService() {
         return username -> {
             if (adminUsername.equals(username)) {
-                throw new UsernameNotFoundException("User not found");
+                return org.springframework.security.core.userdetails.User
+                        .withUsername(adminUsername)
+                        .password(passwordEncoder().encode(adminPassword))
+                        .roles("ADMIN")
+                        .build();
             }
             throw new UsernameNotFoundException("User not found");
         };
