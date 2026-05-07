@@ -8,8 +8,7 @@ import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -19,11 +18,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IngestionService {
-
-    private static final Logger logger = LoggerFactory.getLogger(IngestionService.class);
 
     @Value("${documents.path:documents}")
     private String documentsPath;
@@ -36,6 +34,7 @@ public class IngestionService {
         Path path = Paths.get(documentsPath);
 
         try {
+            log.info("Начинаю индексацию документов из: {}", path.toAbsolutePath());
             DocumentParser parser = new TextDocumentParser();
             List<Document> documents = FileSystemDocumentLoader.loadDocuments(path, parser);
 
@@ -45,11 +44,10 @@ public class IngestionService {
                     .embeddingStore(embeddingStore)
                     .build();
 
-            logger.info("Начинаю индексацию документов из: {}", path.toAbsolutePath());
             ingestor.ingest(documents);
-            logger.info("Индексация завершена успешно!");
+            log.info("Индексация завершена успешно!");
         } catch (Exception e) {
-            logger.error("Ошибка при индексации документов: {}", e.getMessage(), e);
+            log.error("Ошибка при индексации документов: {}", e.getMessage(), e);
         }
     }
 }

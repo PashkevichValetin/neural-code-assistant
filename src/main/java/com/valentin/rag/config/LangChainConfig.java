@@ -13,18 +13,15 @@ import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.Duration;
-import java.util.logging.Logger;
 
 @Configuration
 @Slf4j
 public class LangChainConfig {
-//    private static final Logger logger = LoggerFactory.getLogger(AuthenticationConfig.class);
 
     @Value("${ollama.base-url}")
     private String baseUrl;
