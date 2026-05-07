@@ -42,8 +42,8 @@ langchain4j:
     host: localhost
     port: 5432
     database: rag_db
-    user: valentin
-    password: secret
+    user: admin
+    password: admin123
     table: test_embeddings
     dimension: 768
 
