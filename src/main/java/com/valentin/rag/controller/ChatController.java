@@ -3,12 +3,14 @@ package com.valentin.rag.controller;
 import com.valentin.rag.service.Assistant;
 import com.valentin.rag.service.ChatService;
 import com.valentin.rag.service.ModelSelectorService;
+import com.valentin.rag.service.SecurityService;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.service.AiServices;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -24,10 +26,16 @@ public class ChatController {
     private final Assistant streamingAssistant;
     private final ModelSelectorService modelSelectorService;
     private final ContentRetriever contentRetriever;
+    private final SecurityService securityService;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<Map<String, String>> stream(@RequestParam String question,
                                             @RequestParam(required = false) String modelName) {
+        // Проверяем аутентификацию
+        if (!securityService.isUserAuthenticated()) {
+            return Flux.error(new SecurityException("Доступ запрещен. Пожалуйста, авторизуйтесь"));
+        }
+
         if (question == null || question.trim().isEmpty()) {
             return Flux.error(new IllegalArgumentException("Вопрос не может быть пустым"));
         }
@@ -64,6 +72,11 @@ public class ChatController {
     @GetMapping("/ask")
     public ResponseEntity<String> ask(@RequestParam String question,
                                       @RequestParam(required = false) String modelName) {
+        // Проверяем аутентификацию
+        if (!securityService.isUserAuthenticated()) {
+            return ResponseEntity.status(401).body("Доступ запрещен. Пожалуйста, авторизуйтесь");
+        }
+
         if (question == null || question.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Вопрос не может быть пустым");
         }
@@ -79,6 +92,11 @@ public class ChatController {
 
     @GetMapping("/models")
     public ResponseEntity<List<String>> getAvailableModels() {
+        // Проверяем аутентификацию
+        if (!securityService.isUserAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+
         try {
             return ResponseEntity.ok(modelSelectorService.getAvailableModels());
         } catch (Exception e) {
